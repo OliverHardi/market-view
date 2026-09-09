@@ -100,7 +100,8 @@ html, body {
     z-index: 8;
     font-size: 12px;
     opacity: 0.8;
-    transition: all 0.25s ease
+    transition: all 0.25s ease;
+    pointer-events: none;
 }
 .sector-label::before {
     content: "";
