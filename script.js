@@ -35,24 +35,30 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") hidePopup();
 });
 
-const newsCache = new Map(); // ticker -> { data, fetchedAt }
-const NEWS_CACHE_MS = 15 * 60 * 1000;
+let newsData = null;
 
 async function getNews(ticker) {
-    const cached = newsCache.get(ticker);
-    if (cached && Date.now() - cached.fetchedAt < NEWS_CACHE_MS) {
-        return cached.data;
+    if (!newsData) {
+        try {
+            const response = await fetch("./news.json", {
+                cache: "no-cache"
+            });
+
+            if (!response.ok) {
+                throw new Error(
+                    `Failed to load news.json: ${response.status}`
+                );
+            }
+
+            newsData = await response.json();
+
+        } catch (error) {
+            console.error("Failed to load news data:", error);
+            return [];
+        }
     }
-    try {
-        const res = await fetch(`/api/news/${ticker}`);
-        if (!res.ok) throw new Error(`${res.status}`);
-        const data = await res.json();
-        newsCache.set(ticker, { data, fetchedAt: Date.now() });
-        return data;
-    } catch (err) {
-        console.error(`Failed to fetch news for ${ticker}`, err);
-        return { error: true };
-    }
+
+    return newsData[ticker] || [];
 }
 
 function showPopup(stock, targetBox) {
@@ -212,11 +218,29 @@ function getCol(t) {
     return color;
 }
 
-async function getStocks() {
-    const response = await fetch("/api/stocks");
-    const stocks = await response.json();
+// async function getStocks() {
+//     const response = await fetch("/api/stocks");
+//     const stocks = await response.json();
 
-    return stocks;
+//     return stocks;
+// }
+
+async function getStocks() {
+    try {
+        const res = await fetch("./stocks.json", {
+            cache: "no-cache"
+        });
+
+        if (!res.ok) {
+            throw new Error(`Failed to load stocks.json: ${res.status}`);
+        }
+
+        return await res.json();
+
+    } catch (error) {
+        console.error("Failed to load stock data:", error);
+        return [];
+    }
 }
 
 const bounds = {

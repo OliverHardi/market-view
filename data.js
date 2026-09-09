@@ -4,13 +4,6 @@ import path from "path";
 
 const yahooFinance = new YahooFinance();
 
-// Global Cache Storage
-let cachedStocksData = null;
-let lastFetchTime = 0;
-
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-let isFetching = false;
-
 // Helper utility to pause execution between API calls
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -211,34 +204,16 @@ async function getStocks() {
 // NEWS
 // ---------------------------------------------------------
 
-const newsCache = new Map();
-
-const NEWS_CACHE_DURATION =
-    15 * 60 * 1000;
 
 
-// Fetch news for a ticker
-async function getNews(ticker) {
+async function updateNewsCache(tickers) {
+    const newsData = {};
 
-    ticker = ticker.toUpperCase();
+    for (const ticker of tickers) {
+        try {
+            console.log(`📰 Fetching news for ${ticker}...`);
 
-    const cached = newsCache.get(ticker);
-
-
-    // Return cached news if still valid
-    if (
-        cached &&
-        Date.now() - cached.fetchedAt <
-        NEWS_CACHE_DURATION
-    ) {
-        return cached.data;
-    }
-
-
-    try {
-
-        const result =
-            await yahooFinance.search(
+            const result = await yahooFinance.search(
                 ticker,
                 {
                     newsCount: 6,
@@ -246,58 +221,43 @@ async function getNews(ticker) {
                 }
             );
 
-
-        const news =
-            (result.news || []).map(item => ({
-
-                title:
-                    item.title,
-
-                publisher:
-                    item.publisher,
-
-                link:
-                    item.link,
-
-                publishedAt:
-                    item.providerPublishTime,
-
+            newsData[ticker] = (result.news || []).map(item => ({
+                title: item.title,
+                publisher: item.publisher,
+                link: item.link,
+                publishedAt: item.providerPublishTime,
                 thumbnail:
-                    item.thumbnail
-                        ?.resolutions?.[0]?.url ||
-                    null
+                    item.thumbnail?.resolutions?.[0]?.url || null
             }));
 
+        } catch (error) {
+            console.error(
+                `⚠️ Failed fetching news for ${ticker}:`,
+                error.message
+            );
 
-        newsCache.set(
-            ticker,
-            {
-                data: news,
-                fetchedAt: Date.now()
-            }
-        );
+            newsData[ticker] = [];
+        }
 
-
-        return news;
-
-    } catch (error) {
-
-        console.error(
-            `⚠️ Failed fetching news for ${ticker}:`,
-            error.message
-        );
-
-        // Serve stale cache if available
-        return cached
-            ? cached.data
-            : [];
+        // Small delay between requests
+        await sleep(350);
     }
+
+    fs.writeFileSync(
+        path.join(process.cwd(), "news.json"),
+        JSON.stringify(newsData)
+    );
+
+    console.log(`✅ Saved news for ${Object.keys(newsData).length} stocks.`);
+
+    return newsData;
 }
 
 
 // Export everything the rest of the application needs
 export {
     updateStockCache,
+    updateNewsCache,
     getStocks,
     getNews
 };
