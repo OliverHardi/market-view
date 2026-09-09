@@ -178,6 +178,12 @@ html, body {
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     max-height: 220px;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.popup-news-section::-webkit-scrollbar {
+    display: none;
 }
 
 .popup-news-heading {

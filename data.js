@@ -257,8 +257,6 @@ async function updateNewsCache(tickers) {
 // Export everything the rest of the application needs
 export {
     updateStockCache,
-    updateNewsCache,
-    getStocks,
-    getNews
+    updateNewsCache
 };
 
