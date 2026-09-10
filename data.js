@@ -52,6 +52,16 @@ async function getSP500SectorMap() {
     }
 }
 
+// is fetching flag to prevent multiple simultaneous fetches
+let isFetching = false;
+
+// Cached stock data and last fetch timestamp
+let cachedStocksData = null;
+let lastFetchTime = 0;
+
+// Cache duration in milliseconds (e.g., 1 hour)
+const CACHE_DURATION = 60 * 60 * 1000;
+
 
 // Fetch the S&P 500 and update the cache
 async function updateStockCache() {

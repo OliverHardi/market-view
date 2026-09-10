@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "update-news": "node update-news.js",
-    "update-data": "node update-data.js"
+    "update-stocks": "node update-stocks.js"
   },
   "dependencies": {
     "yahoo-finance2": "^4.0.2"
