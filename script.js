@@ -218,12 +218,6 @@ function getCol(t) {
     return color;
 }
 
-// async function getStocks() {
-//     const response = await fetch("/api/stocks");
-//     const stocks = await response.json();
-
-//     return stocks;
-// }
 
 async function getStocks() {
     try {
@@ -241,6 +235,60 @@ async function getStocks() {
         console.error("Failed to load stock data:", error);
         return [];
     }
+}
+
+async function updateStatus() {
+    try {
+        const response = await fetch("./update-times.json", {
+            cache: "no-cache"
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to load update-times.json");
+        }
+
+        const times = await response.json();
+
+        document.getElementById("stock-update-time").textContent =
+            formatTimeAgo(times.stocks);
+
+        document.getElementById("news-update-time").textContent =
+            formatTimeAgo(times.news);
+
+    } catch (error) {
+        console.error("Failed to load update times:", error);
+    }
+}
+
+function formatTimeAgo(timestamp) {
+    if (!timestamp) {
+        return "unknown";
+    }
+
+    const elapsedMs = Date.now() - new Date(timestamp).getTime();
+    const elapsedHours = elapsedMs / (1000 * 60 * 60);
+
+    if (elapsedHours < 1) {
+        const minutes = Math.floor(elapsedHours * 60);
+
+        if (minutes < 1) {
+            return "less than a minute ago";
+        }
+
+        return `${minutes} min ago`;
+    }
+
+    if (elapsedHours < 24) {
+        return `${elapsedHours.toFixed(1)} hours ago`;
+    }
+
+    const days = elapsedHours / 24;
+
+    if (days < 7) {
+        return `${days.toFixed(1)} days ago`;
+    }
+
+    return `${Math.floor(days)} days ago`;
 }
 
 const bounds = {
@@ -290,6 +338,8 @@ function squarify(items, w, h) {
 }
 
 async function init() {
+    await updateStatus();
+    
     const stocks = await getStocks();
     console.log(stocks);
 

@@ -63,6 +63,27 @@ let lastFetchTime = 0;
 const CACHE_DURATION = 60 * 60 * 1000;
 
 
+function updateTimestamp(type) {
+    const filePath = path.join(process.cwd(), "update-times.json");
+
+    let times = {};
+
+    if (fs.existsSync(filePath)) {
+        try {
+            times = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+        } catch {
+            times = {};
+        }
+    }
+
+    times[type] = new Date().toISOString();
+
+    fs.writeFileSync(
+        filePath,
+        JSON.stringify(times, null, 2)
+    );
+}
+
 // Fetch the S&P 500 and update the cache
 async function updateStockCache() {
     if (isFetching) {
@@ -206,6 +227,8 @@ async function getStocks() {
         updateStockCache();
     }
 
+    updateTimestamp("stocks");
+
     return cachedStocksData || [];
 }
 
@@ -259,6 +282,8 @@ async function updateNewsCache(tickers) {
     );
 
     console.log(`✅ Saved news for ${Object.keys(newsData).length} stocks.`);
+
+    updateTimestamp("news");
 
     return newsData;
 }
