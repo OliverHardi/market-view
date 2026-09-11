@@ -181,7 +181,8 @@ async function updateStockCache() {
             outputPath,
             JSON.stringify(cachedStocksData)
         );
-
+    
+        updateTimestamp("stocks");
 
         lastFetchTime = Date.now();
 
@@ -209,28 +210,6 @@ async function updateStockCache() {
     }
 }
 
-
-// Get cached data, refreshing when necessary
-async function getStocks() {
-
-    const isCacheExpired =
-        Date.now() - lastFetchTime >
-        CACHE_DURATION;
-
-
-    // Nothing cached yet
-    if (!cachedStocksData) {
-        await updateStockCache();
-
-    // Cache expired → refresh in background
-    } else if (isCacheExpired && !isFetching) {
-        updateStockCache();
-    }
-
-    updateTimestamp("stocks");
-
-    return cachedStocksData || [];
-}
 
 
 // ---------------------------------------------------------
